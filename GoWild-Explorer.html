@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoWild Explorer — Frontier availability launcher</title>
+<style>
+  :root{
+    --green:#0f7c4a; --green-dark:#0a5c37; --ink:#132019; --muted:#5b6b62;
+    --line:#e2e8e3; --bg:#f6f8f6; --card:#ffffff; --amber:#b45309; --amber-bg:#fef3c7;
+    --red:#b91c1c; --red-bg:#fee2e2; --chip:#e8f3ec; --shadow:0 1px 3px rgba(0,0,0,.07);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--bg);line-height:1.45;-webkit-font-smoothing:antialiased}
+  header{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;padding:22px 20px 20px}
+  .wrap{max-width:940px;margin:0 auto;padding:0 16px}
+  h1{margin:0;font-size:22px;letter-spacing:.2px}
+  .sub{opacity:.9;font-size:13px;margin-top:3px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+    padding:16px;margin:16px 0}
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+  .fld{display:flex;flex-direction:column;gap:4px}
+  .fld label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  input[type=text],input[type=date]{border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:15px;background:#fff}
+  input[type=text]#origin{width:88px;text-transform:uppercase;font-weight:700;letter-spacing:1px}
+  input[type=text]#filter{width:180px}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding-bottom:8px;cursor:pointer;user-select:none}
+  .toggle input{width:18px;height:18px;accent-color:var(--green)}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .seg button{border:0;background:#fff;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;color:var(--muted)}
+  .seg button.on{background:var(--green);color:#fff}
+  .banner{border-radius:10px;padding:12px 14px;font-size:14px;margin:12px 0;display:flex;gap:10px;align-items:flex-start}
+  .banner .ic{font-size:18px;line-height:1}
+  .banner.block{background:var(--red-bg);color:var(--red);border:1px solid #fca5a5}
+  .banner.warn{background:var(--amber-bg);color:var(--amber);border:1px solid #fcd34d}
+  .banner.ok{background:var(--chip);color:var(--green-dark);border:1px solid #b7ddc6}
+  .banner b{font-weight:800}
+  .meta{font-size:13px;color:var(--muted);margin:2px 0 0}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);
+    border-bottom:2px solid var(--line);padding:8px 10px;position:sticky;top:0;background:var(--card);cursor:pointer;white-space:nowrap}
+  th:hover{color:var(--ink)}
+  td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:hover td{background:#fafcfa}
+  .code{font-weight:800;letter-spacing:.5px}
+  .city{color:var(--muted);font-size:13px}
+  .badge{display:inline-block;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;letter-spacing:.3px}
+  .b-ns{background:var(--chip);color:var(--green-dark)}
+  .b-cx{background:#eef1ff;color:#3a44b0}
+  .b-intl{background:#fde6f3;color:#a3266c;margin-left:4px}
+  .status{font-size:13px;font-weight:600}
+  .s-none{color:var(--muted)}
+  .s-yes{color:var(--green-dark)}
+  .go{display:inline-block;text-decoration:none;background:var(--green);color:#fff;font-weight:700;
+    font-size:13px;padding:7px 12px;border-radius:8px;white-space:nowrap}
+  .go:hover{background:var(--green-dark)}
+  .count{font-size:13px;color:var(--muted);margin:10px 2px 0}
+  .foot{font-size:13px;color:var(--muted);margin-top:18px}
+  .foot h3{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink);margin:16px 0 6px}
+  .cal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;font-size:12.5px}
+  .cal div{background:#fff;border:1px solid var(--line);border-radius:7px;padding:6px 9px}
+  .cal b{display:block;color:var(--ink);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  a.inl{color:var(--green-dark);font-weight:600}
+  .empty{text-align:center;padding:26px 12px;color:var(--muted)}
+  .pill{display:inline-block;background:var(--chip);color:var(--green-dark);font-weight:700;border-radius:999px;padding:2px 10px;font-size:12px}
+  .chip{display:inline-block;background:#eef1f0;color:#2a3a32;border-radius:6px;padding:2px 7px;margin:2px 4px 2px 0;font-size:12.5px;font-weight:700;white-space:nowrap}
+  .chip em{font-style:normal;color:#7c8a82;font-weight:500;margin-left:3px}
+  .chip-gw{background:var(--chip);color:var(--green-dark);box-shadow:inset 0 0 0 1px #9ccdb0}
+  .muted-sm{color:var(--muted);font-size:12.5px}
+  .seatnote{color:#b45309;font-weight:800;font-size:11px}
+  .scanbtn{border:1px solid var(--green);background:#fff;color:var(--green-dark);font-weight:700;font-size:14px;padding:9px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .scanbtn:hover{background:var(--chip)}
+  .scanbox{margin-top:12px;background:#f3f8f4;border:1px solid #cfe6d8;border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.6}
+  .scanbox code{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 9px;font-size:13px;font-weight:700;color:var(--ink);user-select:all}
+  .scanbox .cp{margin-left:8px;border:0;background:var(--green);color:#fff;font-weight:700;border-radius:6px;padding:6px 11px;cursor:pointer;font-size:12.5px}
+  .scanbox .cp:hover{background:var(--green-dark)}
+  .scanbox .x{float:right;cursor:pointer;color:var(--muted);font-weight:700;border:0;background:none;font-size:15px;line-height:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>✈️ GoWild Explorer</h1>
+    <div class="sub">See every Frontier destination from your airport for a chosen day, filter to nonstop, and jump straight into Frontier's GoWild search — one click per route instead of one search at a time.</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="panel">
+    <div class="controls">
+      <div class="fld">
+        <label>From</label>
+        <input type="text" id="origin" value="CLT" maxlength="3" spellcheck="false">
+      </div>
+      <div class="fld">
+        <label>Travel date</label>
+        <input type="date" id="date">
+      </div>
+      <div class="fld">
+        <label>&nbsp;</label>
+        <button id="scanBtn" class="scanbtn" type="button">📡 Scan this date</button>
+      </div>
+      <div class="fld">
+        <label>Show</label>
+        <div class="seg" id="seg">
+          <button data-f="all" class="on">All</button>
+          <button data-f="ns">Nonstop only</button>
+        </div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="servedOnly" checked> Served routes only</label>
+      <div class="fld">
+        <label>Find</label>
+        <input type="text" id="filter" placeholder="city or code" spellcheck="false">
+      </div>
+    </div>
+    <div id="scanBox" class="scanbox" style="display:none"></div>
+    <div id="banner"></div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="count" id="count"></div>
+  <div class="panel" style="padding:0;overflow:hidden">
+    <table>
+      <thead><tr>
+        <th data-s="code">Dest ▾</th>
+        <th data-s="type">Type</th>
+        <th style="cursor:default">Departs (nonstop)</th>
+        <th data-s="status">GoWild now</th>
+        <th style="cursor:default">Open on Frontier</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="emptyState" style="display:none"></div>
+  </div>
+
+  <div class="foot">
+    <h3>How this works</h3>
+    <p>Frontier only lets you check one route and one date at a time, and it has no public availability feed that a webpage can read directly. This launcher solves the tedious part: it lists your airport's whole Frontier network for whatever date you pick, lets you filter to nonstop, and gives every destination a one‑click link that opens Frontier's real search with your route and date already filled in — so you can eyeball the whole map fast instead of typing 40 searches.</p>
+
+    <h3>Reading "GoWild now" and the fares</h3>
+    <p>GoWild has two ways to book. <b>Day‑of:</b> seats open the day before departure (they drop around <b>12:00 AM local</b> the night before) at the classic ~$0.01 + tax fare. <b>Early booking:</b> Frontier also releases select seats further ahead for a per‑segment fee, so a future date can absolutely show GoWild — just at a higher fare (e.g. ~$59 domestic / ~$74 to San Juan on the Jul 25 example). Each green chip shows that flight's GoWild fare, so you can tell a near‑free day‑of seat from a paid early‑booking one at a glance. The column reflects the last scan (<span id="scanNote"></span>) — pick any date and scan it for current fares; the Frontier link always confirms live.</p>
+    <p>The <b>Departs (nonstop)</b> column lists each nonstop route's departure times and flight length from the last scan (e.g. <span class="chip">1:22p<em>1h45m</em></span>). When a GoWild seat is open on a flight, its time chip turns green — so you can see at a glance not just <em>where</em> you can go, but <em>when</em>. Connecting destinations show "via connection"; open them on Frontier for itinerary times.</p>
+
+    <h3>Blackout dates come first</h3>
+    <p>Even on a wide‑open route, GoWild simply doesn't work on blackout dates — they sit on every major holiday and peak weekend. This tool checks your chosen date against Frontier's published 2026–27 blackout calendar and warns you before you waste time. Today's zero results are a blackout, not a bug: <b>July 2–6 is blacked out</b>; the next GoWild‑eligible day is <b>July 7</b>.</p>
+
+    <h3>2026 GoWild blackout dates (domestic)</h3>
+    <div class="cal">
+      <div><b>Jan</b> 1, 3–4, 15–16, 19</div>
+      <div><b>Feb</b> 12–13, 16</div>
+      <div><b>Mar</b> 13–15, 20–22, 27–29</div>
+      <div><b>Apr</b> 3–6, 10–12</div>
+      <div><b>May</b> 21–22, 25</div>
+      <div><b>Jun</b> 25–28</div>
+      <div><b>Jul</b> 2–6</div>
+      <div><b>Aug</b> none 🎉</div>
+      <div><b>Sep</b> 3–4, 7</div>
+      <div><b>Oct</b> 8–9, 11–12</div>
+      <div><b>Nov</b> 24–25, 28–30</div>
+      <div><b>Dec</b> 19–24, 26–31</div>
+    </div>
+    <p style="margin-top:12px">Blackout dates are Frontier's own and can change — always the final word is Frontier's <a class="inl" href="https://www.flyfrontier.com/deals/gowild-pass/" target="_blank" rel="noopener">GoWild Pass page</a>. To load any date, pick it on the calendar and hit <b>📡 Scan this date</b> — it hands Claude a ready command; Claude runs the scan in your browser and fills in the times and GoWild fares (reload to see them). Today and tomorrow also auto‑refresh each morning.</p>
+  </div>
+</div>
+
+<!-- Availability data — refreshed by the daily scan. Loaded from a separate file so a re-scan
+     only has to overwrite gowild-data.js. Falls back gracefully if the file is missing. -->
+<script src="gowild-data.js"></script>
+<script>
+// ---------- Data (loaded from gowild-data.js; fallback if absent) ----------
+const SCAN = window.SCAN || { origin:"CLT", scannedAt:"(not yet scanned)", dates:{} };
+
+// CLT Frontier network. type: "ns" nonstop, "cx" connecting. intl flag for customs/10-day window.
+const NET = [
+  {c:"BWI",n:"Baltimore, MD",t:"ns"},
+  {c:"DEN",n:"Denver, CO",t:"ns"},
+  {c:"DFW",n:"Dallas–Fort Worth, TX",t:"ns"},
+  {c:"FLL",n:"Fort Lauderdale, FL",t:"ns"},
+  {c:"IAH",n:"Houston, TX",t:"ns"},
+  {c:"MCO",n:"Orlando, FL",t:"ns"},
+  {c:"MIA",n:"Miami, FL",t:"ns"},
+  {c:"PHL",n:"Philadelphia, PA",t:"ns"},
+  {c:"PHX",n:"Phoenix, AZ",t:"ns"},
+  {c:"LGA",n:"New York–LaGuardia, NY",t:"ns"},
+  {c:"SJU",n:"San Juan, PR",t:"ns"},
+  {c:"ATL",n:"Atlanta, GA",t:"cx"},
+  {c:"AUS",n:"Austin, TX",t:"cx"},
+  {c:"BNA",n:"Nashville, TN",t:"cx"},
+  {c:"BOS",n:"Boston, MA",t:"cx"},
+  {c:"BDL",n:"Hartford, CT",t:"cx"},
+  {c:"BUF",n:"Buffalo, NY",t:"cx"},
+  {c:"CLE",n:"Cleveland, OH",t:"cx"},
+  {c:"CMH",n:"Columbus, OH",t:"cx"},
+  {c:"CVG",n:"Cincinnati, OH",t:"cx"},
+  {c:"CUN",n:"Cancún, MX",t:"cx",intl:true},
+  {c:"DTW",n:"Detroit, MI",t:"cx"},
+  {c:"ELP",n:"El Paso, TX",t:"cx"},
+  {c:"GRR",n:"Grand Rapids, MI",t:"cx"},
+  {c:"IND",n:"Indianapolis, IN",t:"cx"},
+  {c:"LAS",n:"Las Vegas, NV",t:"cx"},
+  {c:"LAX",n:"Los Angeles, CA",t:"cx"},
+  {c:"MCI",n:"Kansas City, MO",t:"cx"},
+  {c:"MDW",n:"Chicago–Midway, IL",t:"cx"},
+  {c:"MKE",n:"Milwaukee, WI",t:"cx"},
+  {c:"MSP",n:"Minneapolis, MN",t:"cx"},
+  {c:"MSY",n:"New Orleans, LA",t:"cx"},
+  {c:"OMA",n:"Omaha, NE",t:"cx"},
+  {c:"ONT",n:"Ontario, CA",t:"cx"},
+  {c:"ORD",n:"Chicago–O'Hare, IL",t:"cx"},
+  {c:"PIT",n:"Pittsburgh, PA",t:"cx"},
+  {c:"PNS",n:"Pensacola, FL",t:"cx"},
+  {c:"RDU",n:"Raleigh–Durham, NC",t:"cx"},
+  {c:"SAN",n:"San Diego, CA",t:"cx"},
+  {c:"SAT",n:"San Antonio, TX",t:"cx"},
+  {c:"SEA",n:"Seattle, WA",t:"cx"},
+  {c:"SFO",n:"San Francisco, CA",t:"cx"},
+  {c:"SLC",n:"Salt Lake City, UT",t:"cx"},
+  {c:"STL",n:"St. Louis, MO",t:"cx"},
+  {c:"TPA",n:"Tampa, FL",t:"cx"}
+];
+// Destinations Frontier did NOT serve from CLT on the scan (shown only if "served only" is off)
+const UNSERVED = [
+  {c:"DCA",n:"Washington, DC"},{c:"RSW",n:"Fort Myers, FL"},{c:"JAX",n:"Jacksonville, FL"},
+  {c:"PBI",n:"West Palm Beach, FL"},{c:"SRQ",n:"Sarasota, FL"},{c:"MYR",n:"Myrtle Beach, SC"},
+  {c:"CHS",n:"Charleston, SC"},{c:"SAV",n:"Savannah, GA"},{c:"GSP",n:"Greenville, SC"},{c:"SMF",n:"Sacramento, CA"}
+];
+
+// ---------- Blackout calendar (domestic) ----------
+function expand(y,m,spec){ // spec: array of [d] or [d1,d2]
+  const out=[]; spec.forEach(r=>{const a=r[0],b=r.length>1?r[1]:r[0];
+    for(let d=a;d<=b;d++) out.push(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);});
+  return out;
+}
+let BLACKOUT = [].concat(
+  expand(2026,1,[[1,1],[3,4],[15,16],[19,19]]),
+  expand(2026,2,[[12,13],[16,16]]),
+  expand(2026,3,[[13,15],[20,22],[27,29]]),
+  expand(2026,4,[[3,6],[10,12]]),
+  expand(2026,5,[[21,22],[25,25]]),
+  expand(2026,6,[[25,28]]),
+  expand(2026,7,[[2,6]]),
+  expand(2026,9,[[3,4],[7,7]]),
+  expand(2026,10,[[8,9],[11,12]]),
+  expand(2026,11,[[24,25],[28,30]]),
+  expand(2026,12,[[19,24],[26,31]]),
+  expand(2027,1,[[1,3],[14,15],[18,18]]),
+  expand(2027,2,[[11,12],[15,15]]),
+  expand(2027,3,[[12,14],[19,21],[26,29]]),
+  expand(2027,4,[[2,4]])
+);
+const BLACKSET = new Set(BLACKOUT);
+
+// ---------- State ----------
+let filterType="all", sortKey="code", sortDir=1;
+
+// ---------- Helpers ----------
+const $=id=>document.getElementById(id);
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function frontierDate(d){ // "Jul 04, 2026"
+  return `${MON[d.getMonth()]} ${String(d.getDate()).padStart(2,'0')}, ${d.getFullYear()}`;
+}
+function bookingURL(o,dest,d){
+  const dd=encodeURIComponent(frontierDate(d));
+  return `https://booking.flyfrontier.com/Flight/InternalSelect?o1=${o}&d1=${dest}&dd1=${dd}&ADT=1&mon=true&promo=`;
+}
+function parseDate(v){const [y,m,d]=v.split('-').map(Number);return new Date(y,m-1,d);}
+function fmtTime(s){ if(!s) return ''; return s.replace(/\s*AM$/i,'a').replace(/\s*PM$/i,'p'); }
+function fmtDur(s){ if(!s) return ''; const h=(s.match(/(\d+)\s*hr/)||[])[1]; const m=(s.match(/(\d+)\s*min/)||[])[1];
+  return (h?h+'h':'')+(m?(h?String(m).padStart(2,'0'):m)+'m':''); }
+function copyText(t){ try{ if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t); return true; } }catch(e){}
+  try{ const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); return true; }catch(e){ return false; } }
+function nextOpen(v){let d=parseDate(v);for(let i=0;i<60;i++){if(!BLACKSET.has(iso(d)))return d;d.setDate(d.getDate()+1);}return null;}
+
+// ---------- Render ----------
+function render(){
+  const o=($("origin").value||"CLT").toUpperCase().slice(0,3);
+  const dv=$("date").value; const d=parseDate(dv);
+  const q=$("filter").value.trim().toLowerCase();
+  const servedOnly=$("servedOnly").checked;
+  const isCLT = o==="CLT";
+
+  // Banner
+  const b=$("banner"); const isBlack=BLACKSET.has(dv);
+  const isToday = dv===SCAN.scannedAt;
+  if(isBlack){
+    const no=nextOpen(dv); const noTxt=no?`${MON[no.getMonth()]} ${no.getDate()}`:"—";
+    b.className="banner block";
+    b.innerHTML=`<span class="ic">⛔</span><div><b>Blackout date.</b> ${frontierDate(d)} is on Frontier's GoWild blackout list — no GoWild seats are released, on any route. Next GoWild‑eligible date: <b>${noTxt}</b>. (Standard fares still work; only the 1¢ GoWild fare is blocked.)</div>`;
+  } else {
+    const today=new Date(); today.setHours(0,0,0,0);
+    const diff=Math.round((d-today)/86400000);
+    if(diff<0){ b.className="banner warn"; b.innerHTML=`<span class="ic">🕓</span><div>That date is in the past.</div>`; }
+    else if(diff<=1){ b.className="banner ok"; b.innerHTML=`<span class="ic">✅</span><div><b>Open date, inside the day‑before window.</b> Classic GoWild seats (~$0.01 + tax) are released now or drop at midnight local. Green chips below show what's open.</div>`; }
+    else { b.className="banner ok"; b.innerHTML=`<span class="ic">📅</span><div><b>Open date, ${diff} days out.</b> GoWild seats may be bookable now via <b>early booking</b> — a per‑segment fee that's baked into the fare on each green chip. The classic ~$0.01 fare opens the day before. Scan this date for live fares, or use the links.</div>`; }
+  }
+  // Not-yet-scanned note (skip for past dates)
+  const _today=new Date(); _today.setHours(0,0,0,0);
+  const dayScanned = !!(SCAN.dates && SCAN.dates[dv]);
+  if(!dayScanned && d>=_today){
+    b.innerHTML += `<div style="margin-top:8px;font-weight:600;opacity:.92">🔍 This date isn't scanned yet — ask Claude to <b>“scan ${frontierDate(d)}”</b> and the nonstop times and GoWild fares will fill in here. The Frontier links below already work for this date.</div>`;
+  }
+
+  // Meta
+  $("meta").innerHTML = isCLT
+    ? `Showing Frontier's <b>${NET.length}</b>-destination network from <b>CLT</b>. Network reference from the ${SCAN.scannedAt} scan.`
+    : `Origin set to <b>${o}</b>. The destination list below is Frontier's <b>CLT</b> network — links still work for ${o}, but re‑scan for an accurate ${o} map.`;
+  $("scanNote").textContent = `${SCAN.origin}, scanned ${SCAN.scannedAt}`;
+
+  // Rows
+  let items = NET.map(x=>({...x, served:true}));
+  if(!servedOnly) items = items.concat(UNSERVED.map(x=>({...x,t:"cx",served:false})));
+  if(filterType==="ns") items=items.filter(x=>x.t==="ns");
+  if(q) items=items.filter(x=>x.c.toLowerCase().includes(q)||x.n.toLowerCase().includes(q));
+
+  const dayRec = (SCAN.dates && SCAN.dates[dv]) ? SCAN.dates[dv] : null;
+  const routes = dayRec ? (dayRec.routes||{}) : null;
+  const gwOn = c => !!(routes && routes[c] && routes[c].some(f=>f.gw));
+  const rank={ns:0,cx:1};
+  items.sort((a,b)=>{
+    let r=0;
+    if(sortKey==="type") r=(rank[a.t]-rank[b.t]);
+    else if(sortKey==="status") r=((gwOn(b.c)?1:0)-(gwOn(a.c)?1:0));
+    else r=a.c.localeCompare(b.c);
+    if(r===0) r=a.c.localeCompare(b.c);
+    return r*sortDir;
+  });
+
+  const rows=$("rows"); rows.innerHTML="";
+  items.forEach(x=>{
+    const tr=document.createElement("tr");
+    const typeBadge = x.served
+      ? (x.t==="ns"?`<span class="badge b-ns">NONSTOP</span>`:`<span class="badge b-cx">1 STOP</span>`)
+      : `<span class="badge" style="background:#f1f1f1;color:#888">not served</span>`;
+    const intl = x.intl?`<span class="badge b-intl">INT'L</span>`:"";
+    const flights = routes ? (routes[x.c]||null) : null;
+    let times;
+    if(flights && flights.length){
+      times = flights.map(f=>{
+        const price = (f.gw && typeof f.fare==="number" && f.fare>=0) ? ` · $${f.fare.toFixed(2)}` : "";
+        const seat = f.seats ? ` <span class="seatnote">${f.seats}</span>` : "";
+        const tip = (f.dur||"") + (f.gw ? (price?` · GoWild $${f.fare.toFixed(2)}`:" · GoWild available") : "");
+        return `<span class="chip ${f.gw?'chip-gw':''}" title="${tip}">${fmtTime(f.dep)}<em>${fmtDur(f.dur)}</em>${price}${seat}</span>`;
+      }).join("");
+    } else if(x.served && x.t==="cx"){
+      times = `<span class="muted-sm">via connection</span>`;
+    } else {
+      times = `<span class="muted-sm">—</span>`;
+    }
+    let status;
+    if(!x.served){ status=`<span class="status s-none">—</span>`; }
+    else if(isBlack){ status=`<span class="status s-none">blackout</span>`; }
+    else if(dayRec){ status = gwOn(x.c)?`<span class="status s-yes">available</span>`:`<span class="status s-none">none</span>`; }
+    else { status=`<span class="status s-none">—</span>`; }
+    tr.innerHTML=`
+      <td><span class="code">${x.c}</span> ${intl}<div class="city">${x.n}</div></td>
+      <td>${typeBadge}</td>
+      <td>${times}</td>
+      <td>${status}</td>
+      <td><a class="go" target="_blank" rel="noopener" href="${bookingURL(o,x.c,d)}">Search ↗</a></td>`;
+    rows.appendChild(tr);
+  });
+
+  const nsCount=items.filter(x=>x.t==="ns"&&x.served).length;
+  $("count").innerHTML = `<span class="pill">${items.length} shown</span> &nbsp; ${filterType==="ns"?"nonstop only":`${nsCount} nonstop · ${items.filter(x=>x.served&&x.t==="cx").length} connecting`}`;
+  const es=$("emptyState");
+  if(items.length===0){ es.style.display="block"; es.textContent="No destinations match your filters."; }
+  else es.style.display="none";
+}
+
+// ---------- Wire up ----------
+(function init(){
+  const d=$("date");
+  const t0=new Date(); t0.setHours(0,0,0,0);
+  d.min=iso(t0);
+  const tMax=new Date(t0); tMax.setDate(tMax.getDate()+330); d.max=iso(tMax);
+  d.value=SCAN.scannedAt; // default to scan day
+  d.addEventListener("change",()=>{ $("scanBox").style.display="none"; render(); });
+  $("origin").addEventListener("input",render);
+  $("scanBtn").addEventListener("click",()=>{
+    const dv=$("date").value; if(!dv) return; const dObj=parseDate(dv);
+    const already = !!(SCAN.dates && SCAN.dates[dv]);
+    const cmd = `Scan CLT GoWild for ${dv} and update the dashboard`;
+    const box=$("scanBox"); box.style.display="block";
+    box.innerHTML = `<button class="x" id="scanX" title="close">×</button>`
+      + `${already?'✓ <b>'+frontierDate(dObj)+'</b> is already scanned — this will refresh it.<br>':''}`
+      + `Send Claude this message to scan <b>${frontierDate(dObj)}</b>:<br>`
+      + `<code id="scanCmd">${cmd}</code><button class="cp" id="cpBtn">Copy</button>`
+      + `<div style="margin-top:8px;color:var(--muted)">Claude runs the scan in your browser and fills in the nonstop times and GoWild fares here — then reload this page to see them.</div>`;
+    const ok=copyText(cmd);
+    $("cpBtn").textContent = ok ? "Copied ✓" : "Copy";
+    $("cpBtn").onclick=()=>{ copyText(cmd); $("cpBtn").textContent="Copied ✓"; };
+    $("scanX").onclick=()=>{ box.style.display="none"; };
+  });
+  $("filter").addEventListener("input",render);
+  $("servedOnly").addEventListener("change",render);
+  document.querySelectorAll("#seg button").forEach(btn=>btn.addEventListener("click",()=>{
+    document.querySelectorAll("#seg button").forEach(b=>b.classList.remove("on"));
+    btn.classList.add("on"); filterType=btn.dataset.f; render();
+  }));
+  document.querySelectorAll("th[data-s]").forEach(th=>th.addEventListener("click",()=>{
+    const k=th.dataset.s; if(sortKey===k) sortDir*=-1; else {sortKey=k;sortDir=1;} render();
+  }));
+  render();
+})();
+</script>
+</body>
+</html>
